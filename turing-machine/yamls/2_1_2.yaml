@@ -1,0 +1,81 @@
+input: '111*11'
+blank: ' '
+start state: check-correct
+
+
+table:
+
+  # проверка случаев 1* и *1
+  check-correct:
+    1: {R: check-star}
+    '*': {L: check-empty}
+  check-star:
+    1: R
+    '*': {R: check-empty}
+  check-empty:
+    ' ': {R: done}
+    1: {L: go-start}
+  
+  
+  go-start:
+    [1, '*', '=']: {L: go-start}
+    ' ': {R: preload}
+  
+  preload:              # добавляем = 
+    [1, '*']: R
+    ' ': {write: '=', R: λ-end}
+  λ-end:                # добавляем λ в конец
+    ' ': {write: 'λ', L: λ-start}
+    [1, '=', '*']: L
+  λ-start:              # добавляем λ в начало
+    ' ': {write: 'λ', R: start}
+    ['λ', '=', '*', 1]: L
+    
+    
+  start:              
+    1: R
+    ['x', '*']: {R: process-second}
+    
+  process-second:
+    'x': R
+    1: {write: 'x', L: go-first}
+    '=': {L: clear-λ-start}   # копировать нечего
+  
+  remain-ones:        # проверяем, нужно ли нам копировать снова
+    [1, '=']: {L: go-first}
+    
+  
+  go-first:
+    ['x', '*']: L
+    1: {write: 'x', R: copy}
+    'λ': {R: restore} 
+  
+  restore:            # очередное копирование завершено, восстанавливаем 1
+    'x': {write: 1, R: restore}
+    '*': {R: start}
+    
+  copy:
+    [1, '*', 'x', '=']: R
+    'λ': {write: 1, R: go-end}
+  
+  go-end:
+    ' ': {write: 'λ', L: go-second}
+  
+  go-second:
+    [1, 'x', '=']: L
+    '*': {L: go-first}
+
+  clear-λ-start: 
+    'x': {write: 1, L: clear-λ-start}
+    [1, '*']: L
+    'λ': {write: ' ', R: clear-λ-end}
+    
+  clear-λ-end:
+    [1, '*', 'x', '=']: R
+    'λ': {write: ' ', L: finish}
+    
+  finish:
+      [1, '*', 'x', '=']:  L
+      ' ': {R: done}
+      
+  done:

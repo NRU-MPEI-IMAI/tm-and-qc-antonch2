@@ -1,0 +1,54 @@
+input: '([{}])'
+blank: ' '
+start state: start
+
+
+table:
+  start:
+    ' ': {L: ok}    # пустая скобочная послед
+    ['(', '[', '{']: {R: find-closed}
+    [')', ']', '}']: {L: not-ok}
+    
+  find-closed:
+    ' ': {L: empty-or-ok}    # вышли за граицы слова или не нашли закрывающуюся скобку
+    ['(', '[', '{', 'x']: R
+    ')': {write: 'x', L: closed_1}
+    ']': {write: 'x', L: closed_2}
+    '}': {write: 'x', L: closed_3}
+  
+  closed_1:
+    ' ': {R: not-ok}
+    '(': {write: 'x', R:  find-closed}
+    ['[', '{']: {L: not-ok}
+    'x': L
+  
+  closed_2:
+    ' ': {R: not-ok}
+    '[': {write: 'x', R: find-closed}
+    ['(', '{']: {L: not-ok}
+    'x': L
+
+  closed_3:
+    ' ': {R: not-ok}
+    '{': {write: 'x', R: find-closed}
+    ['[', '(']: {L: not-ok}
+    'x': L 
+    
+  empty-or-ok:
+    ['(', '[', '{']: {L: not-ok} # всё-таки есть необработанная скобка
+    'x': L
+    ' ': {R: ok}
+    
+  not-ok:
+    ['(', ')', '[', ']', '{', '}', 'x']: {write: ' ', R}
+    ' ': {R: go-start}
+  # в начало, чтобы очистить ленту
+  go-start:
+    ['(', ')', '[', ']', '{', '}', 'x']: {write: ' ', R: go-start}
+    ' ': {write: 0, L: done}
+    
+  ok:
+    ' ': {write: 1, L: done}
+    'x': {write: ' ', R}
+
+  done:

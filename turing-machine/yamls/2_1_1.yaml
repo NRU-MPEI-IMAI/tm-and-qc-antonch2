@@ -1,0 +1,16 @@
+input: '111+1'
+blank: ' '
+start state: right
+table:
+  right:
+    1: R
+    '+': {write: '1', R: tail}
+  tail:
+    1: R
+    ' ': {L: del_and_return}
+  del_and_return:
+    1: {write: ' ', L: return}
+  return:
+    1: L
+    ' ': {R: done}
+  done:

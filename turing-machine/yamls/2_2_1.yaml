@@ -1,0 +1,41 @@
+# 2_2_1.yaml
+input: '012012'
+blank: ' '
+start state: start
+
+
+table:
+  start:
+    ' ': {L: ok}    # слово принадлежит языку
+    0: {write: 'x', R: go-one} 
+    [1, 2]: {R: not-ok}
+    'x': R            # новый проход
+  
+  go-one:
+    [0, 'x']: R    
+    1: {write: 'x', R: go-two} 
+    [2, ' ']: {L: not-ok}
+  
+  go-two:
+    ' ': {L: not-ok}
+    [1, 'x']: R
+    2: {write: 'x', L: go-start}
+
+  
+  go-start:
+    ' ': {R: start}
+    [0, 1, 2, 'x']: L 
+    
+  ok:
+    ' ': {write: 1, L: done}
+    'x': {write: ' ', L}
+  
+  not-ok:
+    ' ': {L: del}
+    [0, 1, 2, 'x']: R
+  
+  del:
+    ' ': {write: 0, L: done}
+    [0, 1, 2, 'x']: {write: ' ', L} 
+
+  done:
