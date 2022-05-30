@@ -274,3 +274,9 @@ TSWLatexianTemp*
 
 # Makeindex log files
 *.lpz
+
+
+.DS_Store
+qs/host/*
+qs/quantum/*
+qs/quantum-dotnet.sln

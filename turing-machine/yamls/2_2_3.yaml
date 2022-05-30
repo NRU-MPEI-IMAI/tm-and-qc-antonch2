@@ -1,0 +1,34 @@
+input: 'λ110 01 11λ'
+blank: ' '
+start state: word
+table:
+  word:
+    0: {write: 'a', R: next}
+    1: {write: 'b', R: next}
+    ['a', 'b', 'λ']: R
+    ' ': {write: '+', L: finish}
+    
+  # один раз заменяем за проход
+  next:
+    [0, 1, 'a','b']: R
+    'λ': {write: 'λ', L: go_0} # разворачиваемся
+    ' ': {write: ' ', R: word}
+      
+  go_0:
+    ['a','b', ' ']: L
+    0: {write: 'a', L: go_1}
+    1: {write: 'b', L: go_1}
+    'λ': {write: 'λ', R: go_1}
+  
+  go_1:
+    [0, 1, 'a','b']: L
+    ' ': {write: ' ', L: go_0}
+    'λ': {write: 'λ', R: word}
+  
+  finish:
+    ['y','λ']: L
+    'a': {write: '0', L}
+    'b': {write: '1', L}
+    ' ': {write: ' ', R: done}
+    
+  done:

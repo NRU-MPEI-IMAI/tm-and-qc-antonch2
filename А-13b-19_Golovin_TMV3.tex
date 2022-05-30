@@ -21,6 +21,8 @@
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 
 
+\usepackage{mathtools}
+\DeclarePairedDelimiter\ket{\lvert}{\rangle}
 
 % Graphics  % 
 
@@ -203,7 +205,7 @@
         \begin{itemize}
             \item Все первые вхождения 0, 1, 2 заменяем на 'x'. Возвращаемся в начало.
             \item Повторяем шаг выше, пока слово не будет заменено на все 'x' (иначе слово не принадлежит языку).
-            \item 1 - слов принадлежит языку, 0 - нет
+            \item 1 - слово принадлежит языку, 0 - нет
             \item По усновию $n$ может быть равно 0, поэтому пустое слово тоже принадлежит языку. 
         \end{itemize}
         
@@ -263,7 +265,7 @@
         \begin{itemize}
             \item Ищем первую закрывающуюся скобку. Заменяем её на 'x'. Возвращаемся в начало.
             \item Ищем открывающуюся скобку такого же вида. Заменяем её на 'x'. Возвращаемся в начало.
-            \item 1 - слов принадлежит языку (все 'x'), 0 - нет
+            \item 1 - слово принадлежит языку (все 'x'), 0 - нет
             \item Как и в предыдущем номере, пустое слово - правильная скобочная последовательность.
         \end{itemize}
         
@@ -331,9 +333,184 @@
 
     %%%%%%%%%%%%%%% 3 %%%%%%%%%%%%%%%
     \item Поиск минимального по длине слова в строке (слова состоят из символов 1 и 0 и разделены пробелом) (1 балл)
+    
+        Алгоритм:
+        \begin{itemize}
+            \item Заменяем в каждом слове один раз за проход 0 на 'a', 1 на 'b'.
+            \item Справа налево аналогично
+            \item Если в слове нечего заменять, считаем, что оно минимальное (ставим '+' после слова)
+            \item Пустое слово - минимальное.
+        \end{itemize}
+        
+        \begin{minted}[]{yaml}
+            # 2_2_3.yaml
+            input: 'λ110 01 11λ'
+            blank: ' '
+            start state: word
+            table:
+              word:
+                0: {write: 'a', R: next}
+                1: {write: 'b', R: next}
+                ['a', 'b', 'λ']: R
+                ' ': {write: '+', L: finish}
+                
+              # один раз заменяем за проход
+              next:
+                [0, 1, 'a','b']: R
+                'λ': {write: 'λ', L: go_0} # разворачиваемся
+                ' ': {write: ' ', R: word}
+                  
+              go_0:
+                ['a','b', ' ']: L
+                0: {write: 'a', L: go_1}
+                1: {write: 'b', L: go_1}
+                'λ': {write: 'λ', R: go_1}
+              
+              go_1:
+                [0, 1, 'a','b']: L
+                ' ': {write: ' ', L: go_0}
+                'λ': {write: 'λ', R: word}
+              
+              finish:
+                ['y','λ']: L
+                'a': {write: '0', L}
+                'b': {write: '1', L}
+                ' ': {write: ' ', R: done}
+                
+              done:
+
+        \end{minted}
+        \begin{center}
+            \includegraphics[width=\textwidth]{2_2_3.png} \\
+        \end{center}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{enumerate}
+
 
 \section*{3 Квантовые вычисления}
+\subsection*{3.1 Генерация суперпозиций 1 (1 балл)}
+    Дано $N$ кубитов ($1 \le N \le 8$) в нулевом состоянии $\ket{0\dots0}$. 
+    Также дана некоторая последовательность битов, которое задаёт ненулевое базисное состояние размера $N$. Задача получить суперпозицию нулевого состояния и заданного.
+    
+    $$\ket{S} = \frac{1}{\sqrt2}(\ket{0\dots0} +\ket{\psi})$$
+    
+    То есть, требуется реализовать операцию, которая принимает на вход:
+    \begin{enumerate}
+        \item Массив кубитов $q_s$
+        \item Массив битов $bits$ описывающих некоторое состояние $\ket{\psi}$. Это массив имеет тот же самый размер, что и $q_s$. Первый элемент этого массива равен $1$.
+    \end{enumerate}
+    
+    Пояснения:
+        
+    \begin{itemize}
+        \item В начале у нас есть $N$ незаисимых кубитов $\ket{0}$
+        \item Первые кубиты векторов различны, применим оператор Адамара к первому кубиту
+        \item Все кубиты $qs$ равны 0, $\Rightarrow$ если кубит $bits[i] = 1$, то нужно запутать $i$-ый кубит, а если кубит $bits[i] = 0$, то не нужно, т.к кубиты совпадают и равны 0.
 
-\end{enumerate}
+    \end{itemize}
+    
+    \textbf{Код}
+    
+    \begin{lstlisting}
+        namespace Solution {
+            open Microsoft.Quantum.Primitive;
+            open Microsoft.Quantum.Canon;
+            operation Solve (qs : Qubit[], bits : Bool[]) : Unit 
+            {
+                body
+                {
+                    H(qs[0]);
+                    for i in 1..Length(qs) - 1 {
+                        if (bits[i]) {
+                            CNOT(qs[0], qs[i]);
+                        }
+                    }
+                }
+            }
+        }
+    \end{lstlisting}
+    \begin{center}
+        \includegraphics[width=0.4\textwidth]{3_1.png} \\
+    \end{center}
+
+
+\newpage
+
+
+\subsection*{3.2 Различение состояний 1 (1 балл)}
+
+    Дано $N$ кубитов ($1 \le N \le 8$), которые могут быть в одном из двух состояний:
+    
+    $$\ket{GHZ} = \frac{1}{\sqrt2}(\ket{0\dots0} +\ket{1\dots1})$$
+    $$\ket{W} = \frac{1}{\sqrt N}(\ket{10\dots00}+\ket{01\dots00} + \dots +\ket{00\dots01})$$
+    
+    Требуется выполнить необходимые преобразования, чтобы точно различить эти два состояния. Возвращать $0$, если первое состояние и 1, если второе. 
+    
+    Пояснения:
+        
+    \begin{itemize}
+        \item Чтобы измерить состояние системы надо измерить кубиты
+        \item При $N$ > 1 cостояние 1: $N$ нулей, либо $N$ единиц, cостояние 2: 1 единица
+        \item При $N$ = 1 состояния не различить (в обоих состояниях может выпасть вектор, который содержит одну единицу)
+
+    \end{itemize}
+    
+    \textbf{Код}
+
+    \begin{lstlisting}
+        namespace Solution {
+            open Microsoft.Quantum.Primitive;
+            open Microsoft.Quantum.Canon;
+            operation Solve (qs : Qubit[]) : Int 
+            {
+                body
+                {
+                    mutable ones = 0;
+                    for i in 0..Length(qs) - 1 {
+                        if (M(qs[0]) == One) {  // measurement
+                            set ones += 1;
+                        }
+                    }
+                    if (ones == 1) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            }
+        }
+    \end{lstlisting}
+ 
+    
+\newpage
+
+
+\subsection*{3.3 Различение состояний 2 (2 балл)}
+
+    Дано $2$ кубита, которые могут быть в одном из двух состояний:
+    $$\ket{S_0} = \frac{1}{2}(\ket{00} + \ket{01} + \ket{10} + \ket{11})$$
+    $$\ket{S_1} = \frac{1}{2}(\ket{00} - \ket{01} + \ket{10} - \ket{11})$$
+    $$\ket{S_2} = \frac{1}{2}(\ket{00} + \ket{01} - \ket{10} - \ket{11})$$
+    $$\ket{S_3} = \frac{1}{2}(\ket{00} - \ket{01} - \ket{10} + \ket{11})$$
+    
+    
+    Требуется выполнить необходимые преобразования, чтобы точно различить эти четыре состояния. Возвращать требуется индекс состояния (от $0$ до $3$). 
+   
+    \textbf{Код}
+    
+    \begin{lstlisting}
+    namespace Solution {
+            open Microsoft.Quantum.Primitive;
+            open Microsoft.Quantum.Canon;
+            operation Solve (qs : Qubit[]) : Int
+            {
+                body
+                {
+    
+                    return 
+                }
+            }
+    }
+    \end{lstlisting}
+
+
 \end{document}
