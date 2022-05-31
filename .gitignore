@@ -1,3 +1,7 @@
+
+.DS_Store
+
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
@@ -276,7 +280,7 @@ TSWLatexianTemp*
 *.lpz
 
 
-.DS_Store
+
 qs/host/*
 qs/quantum/*
 qs/quantum-dotnet.sln

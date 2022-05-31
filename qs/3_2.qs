@@ -7,7 +7,7 @@ namespace Solution {
         {
             mutable ones = 0;
             for i in 0..Length(qs) - 1 {
-                if (M(qs[0]) == One) {  // measurement
+                if (M(qs[i]) == One) {  // measurement
                     set ones += 1;
                 }
             }
